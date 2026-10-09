@@ -1,0 +1,13 @@
+# Used by BuildKit for docker/Dockerfile (the build context is the project root).
+.git
+.venv
+venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.idea
+.vscode
+# Local settings may contain the Keitaro API key: never bake them into the image.
+**/.env
+*.db
+tests/keitaro_service/.data

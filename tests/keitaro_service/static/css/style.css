@@ -1,0 +1,20 @@
+body { margin: 0; background: #f5f6f8; color: #1d2330; font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: #1f2b24; color: #fff; }
+header strong { color: #6fd08c; font-size: 16px; }
+header span { color: #a9b8ae; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+.muted { color: #6b7385; } .small { font-size: 12px; }
+.card { background: #fff; border: 1px solid #e2e5eb; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.card.highlight { border-color: #2e8b57; box-shadow: 0 0 0 3px #d6f0df; }
+.card h2 { font-size: 16px; margin: 0 0 8px; }
+.stream { padding: 10px 0; border-top: 1px solid #e2e5eb; }
+.filters { color: #2e8b57; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 8px 6px; border-bottom: 1px solid #e2e5eb; }
+td.share { width: 60px; color: #2e8b57; font-weight: 600; }
+td.right { text-align: right; }
+.btn { padding: 4px 10px; border: 1px solid #c9ceda; border-radius: 6px; background: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.btn:hover { background: #f0f2f6; }
+code { background: #eef0f4; padding: 1px 5px; border-radius: 4px; }

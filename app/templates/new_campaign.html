@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}New campaign{% endblock %}
+{% block content %}
+<div class="page-head"><h1>New campaign</h1></div>
+
+<form class="card form" id="new-campaign-form" autocomplete="off">
+  <label>
+    <span>Name</span>
+    <input name="name" required maxlength="255" placeholder="Campaign name">
+  </label>
+  <label>
+    <span>Geo</span>
+    <input name="geo" required placeholder="MX,AU,RO">
+    <small>Two-letter country codes separated by commas. Visitors from these countries are redirected to {{ campaign_settings.geo_redirect_url }}.</small>
+  </label>
+  <label>
+    <span>Offer</span>
+    <div class="autocomplete" data-autocomplete>
+      <input type="text" placeholder="Search offers by name or ID" data-autocomplete-input>
+      <input type="hidden" name="offer_id" data-autocomplete-value>
+      <ul class="autocomplete-list" hidden data-autocomplete-list></ul>
+    </div>
+    <small>Everyone else goes to this offer.</small>
+  </label>
+  <div class="form-foot">
+    <span class="muted">Domain {{ campaign_settings.domain }} · group {{ campaign_settings.group }} · source {{ campaign_settings.source }}</span>
+    <button class="btn btn-primary" type="submit">Create</button>
+  </div>
+</form>
+{% endblock %}

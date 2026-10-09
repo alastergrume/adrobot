@@ -1,0 +1,61 @@
+# Test environment: test database, fake Keitaro service and the application with APP_ENV=TEST.
+# Run from the project root:
+#   docker compose -f docker/docker-compose-test.yml up --build
+# App: http://localhost:8000, fake Keitaro admin: http://localhost:8081/admin/
+name: adrobot-test
+
+services:
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: adrobot
+      POSTGRES_PASSWORD: adrobot
+      POSTGRES_DB: adrobot_test
+    ports:
+      - "${POSTGRES_TEST_PORT:-5433}:5432"
+    # Throwaway storage: a clean test database on every start.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adrobot -d adrobot_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  keitaro:
+    # Fake Keitaro (tests/keitaro_service): answers like the Keitaro Admin API.
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: >
+      sh -c "python -m tests.keitaro_service.seed_test_data --if-empty
+      && exec uvicorn tests.keitaro_service.app:app --host 0.0.0.0 --port 8080"
+    environment:
+      FAKE_KEITARO_API_KEY: test-api-key
+      FAKE_KEITARO_DATA_PATH: /tmp/keitaro/keitaro.json
+    ports:
+      - "${KEITARO_TEST_PORT:-8081}:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      APP_ENV: TEST
+      # Values from app/configs/.env_test, with container names instead of localhost.
+      DATABASE_URL: postgresql+psycopg://adrobot:adrobot@db-test:5432/adrobot_test
+      KEITARO_URL: http://keitaro:8080
+      # "View in KT" links open in the browser, so they need the published port.
+      KEITARO_ADMIN_URL: http://localhost:${KEITARO_TEST_PORT:-8081}
+    ports:
+      - "${APP_TEST_PORT:-8000}:8000"
+    depends_on:
+      db-test:
+        condition: service_healthy
+      keitaro:
+        condition: service_healthy

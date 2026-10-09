@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ campaign.name }}{% endblock %}
+{% set pin_icon %}<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M16 3l5 5-2 1-3 3 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 3-3z" fill="currentColor"/></svg>{% endset %}
+{% block content %}
+<nav class="crumbs"><a href="/">Campaigns</a> / {{ campaign.name }}</nav>
+
+<div class="page-head">
+  <div>
+    <h1>{{ campaign.name }}</h1>
+    <p class="muted">
+      Keitaro ID {{ campaign.keitaro_id }}
+      {% if campaign.url %} · <a href="{{ campaign.url }}" target="_blank" rel="noopener">{{ campaign.url }}</a>{% endif %}
+      {% if campaign.synced_at %} · fetched {{ campaign.synced_at.strftime("%Y-%m-%d %H:%M:%S") }} UTC{% endif %}
+    </p>
+  </div>
+  <div class="head-actions">
+    <button class="btn" data-action="fetch" data-campaign-id="{{ campaign.id }}"
+            data-dirty="{{ 1 if campaign.streams | selectattr('is_dirty') | list else 0 }}">Fetch streams from KT</button>
+    <a class="btn" href="{{ keitaro_link }}" target="_blank" rel="noopener">View in KT ↗</a>
+  </div>
+</div>
+
+{% for stream in campaign.streams %}
+<section class="stream{% if stream.is_dirty %} dirty{% endif %}">
+  <div class="stream-head">
+    <div>
+      <strong>Stream: {{ stream.name }}</strong> <span class="muted">(#{{ stream.position }})</span>
+      <span class="muted small">stream_id {{ stream.keitaro_id }}{% if stream.filters %} · filter: {{ describe_filters(stream.filters) }}{% endif %}</span>
+    </div>
+    {% if stream.is_dirty %}
+    <div class="stream-actions">
+      <span class="badge">Not published</span>
+      <button class="btn btn-primary" data-action="push" data-stream-id="{{ stream.id }}">Push to KT</button>
+      <button class="btn" data-action="cancel" data-stream-id="{{ stream.id }}">Cancel</button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if stream.has_offers %}
+  <table class="offers">
+    <thead><tr><th>Offer</th><th class="share-col">Share</th><th class="right">Actions</th></tr></thead>
+    <tbody>
+    {% for offer in stream.sorted_offers %}
+      <tr class="{{ 'removed' if not offer.is_active }}{{ ' new' if offer.is_new }}">
+        <td>
+          <span class="offer-id">{{ offer.offer_id }}</span> {{ offer.offer_name }}
+          {% if not offer.is_active %}<span class="tag">removed</span>{% endif %}
+          {% if offer.is_new %}<span class="tag tag-new">new</span>{% endif %}
+        </td>
+        <td class="share-col">
+          <div class="share">
+            {% if offer.is_active %}
+              <button class="share-value" data-action="edit-share" data-id="{{ offer.id }}" data-share="{{ offer.share }}"
+                      title="Click to set the share manually (pins it)">{{ offer.share }}%</button>
+              <button class="pin{% if offer.pinned %} pinned{% endif %}" data-action="pin" data-id="{{ offer.id }}"
+                      data-pinned="{{ 1 if offer.pinned else 0 }}"
+                      title="{{ 'Unpin share' if offer.pinned else 'Pin share: keep it when others are recalculated' }}">{{ pin_icon }}</button>
+            {% else %}
+              <span class="share-value">0%</span>
+            {% endif %}
+            {% if offer.is_active and offer.published_status == "removed" %}
+              <span class="was" title="Not in Keitaro now">was removed</span>
+            {% elif offer.published_share is not none and offer.published_share != offer.share %}
+              <span class="was" title="Share in Keitaro now">was {{ offer.published_share }}%</span>
+            {% endif %}
+          </div>
+        </td>
+        <td class="right">
+          {% if offer.is_active %}
+            <button class="btn btn-small" data-action="remove" data-id="{{ offer.id }}">Remove</button>
+          {% else %}
+            <button class="btn btn-small" data-action="bring-back" data-id="{{ offer.id }}">Bring back</button>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="3" class="muted">No offers in this stream.</td></tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">
+          <form class="add-offer" data-stream-id="{{ stream.id }}" autocomplete="off">
+            <div class="autocomplete" data-autocomplete>
+              <input type="text" placeholder="Add an offer: search by name or ID" data-autocomplete-input>
+              <input type="hidden" name="offer_id" data-autocomplete-value>
+              <ul class="autocomplete-list" hidden data-autocomplete-list></ul>
+            </div>
+            <button class="btn" type="submit">Add</button>
+          </form>
+        </td>
+        {% set total = stream.offers | selectattr('is_active') | sum(attribute='share') %}
+        <td class="right total{% if total != 100 %} total-bad{% endif %}">Total {{ total }}%</td>
+      </tr>
+    </tfoot>
+  </table>
+  {% else %}
+  <div class="redirect">
+    {% if stream.action_payload %}Redirect to <a href="{{ stream.action_payload }}" target="_blank" rel="noopener">{{ stream.action_payload }}</a>{% else %}No offers{% endif %}
+    <span class="muted small">· this stream has no offers, so it is shown as is</span>
+  </div>
+  {% endif %}
+</section>
+{% else %}
+<p class="muted">No streams. Press “Fetch streams from KT”.</p>
+{% endfor %}
+{% endblock %}

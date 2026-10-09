@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fake Keitaro</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header><strong>Keitaro</strong><span>fake test service · Admin API at <code>/admin_api/v1</code></span></header>
+  <main>
+    <div class="head">
+      <div>
+        <h1>Campaigns</h1>
+        <p class="muted">This is what the fake tracker contains right now. Delete an offer here to imitate a change made
+          directly in Keitaro, then press “Fetch streams from KT” in the application.</p>
+      </div>
+      <form method="post" action="/admin/reset" onsubmit="return confirm('Reset fake Keitaro to the test data?')">
+        <button class="btn" type="submit">Reset to test data</button>
+      </form>
+    </div>
+
+    {% for item in campaigns %}
+    <section class="card" id="campaign-{{ item.campaign.id }}">
+      <h2>{{ item.campaign.name }} <span class="muted small">ID {{ item.campaign.id }} · alias {{ item.campaign.alias }}</span></h2>
+      {% for stream in item.streams %}
+      <div class="stream">
+        <div><strong>{{ stream.id }} {{ stream.name }}</strong> <span class="muted small">position {{ stream.position }} · schema {{ stream.schema }}</span></div>
+        {% if stream.filters %}<div class="filters">Filters: {{ describe_filters(stream.filters) }}</div>{% endif %}
+        {% if stream.offers %}
+        <table>
+          <tbody>
+          {% for link in stream.offers %}
+            <tr>
+              <td>[{{ link.offer_id }}] {{ offer_names.get(link.offer_id, '?') }}</td>
+              <td class="share">{{ link.share }}%</td>
+              <td class="right">
+                <form method="post" action="/admin/streams/{{ stream.id }}/offers/{{ link.offer_id }}/delete">
+                  <button class="btn" type="submit">Delete in Keitaro</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% elif stream.action_payload %}
+        <div class="muted">Redirect: {{ stream.action_payload }}</div>
+        {% else %}
+        <div class="muted">No offers</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endfor %}
+  </main>
+  <script src="/static/js/scripts.js"></script>
+</body>
+</html>

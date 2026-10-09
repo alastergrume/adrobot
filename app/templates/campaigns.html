@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Campaigns{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Campaigns</h1>
+  <a class="btn btn-primary" href="/campaigns/new">New campaign</a>
+</div>
+
+<section class="card">
+  <h2>In the editor</h2>
+  {% if campaigns %}
+  <table class="list">
+    <thead><tr><th>Name</th><th>Keitaro ID</th><th>Campaign URL</th><th>Fetched</th><th></th></tr></thead>
+    <tbody>
+    {% for campaign in campaigns %}
+      <tr>
+        <td><a href="/campaigns/{{ campaign.id }}">{{ campaign.name }}</a></td>
+        <td>{{ campaign.keitaro_id }}</td>
+        <td class="muted">{{ campaign.url or "—" }}</td>
+        <td class="muted">{{ campaign.synced_at.strftime("%Y-%m-%d %H:%M") if campaign.synced_at else "—" }}</td>
+        <td class="right"><a class="btn" href="/campaigns/{{ campaign.id }}">Open</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No campaigns yet. Create a new one or open an existing campaign from Keitaro below.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Other campaigns in Keitaro</h2>
+  {% if keitaro_error %}
+    <p class="error">Keitaro is unavailable: {{ keitaro_error }}</p>
+  {% elif remote_campaigns %}
+  <table class="list">
+    <thead><tr><th>Name</th><th>Keitaro ID</th><th></th></tr></thead>
+    <tbody>
+    {% for campaign in remote_campaigns %}
+      <tr>
+        <td>{{ campaign.name }}</td>
+        <td>{{ campaign.id }}</td>
+        <td class="right"><button class="btn" data-action="import" data-keitaro-id="{{ campaign.id }}">Open in editor</button></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">All Keitaro campaigns are already in the editor.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,47 @@
+# Production: the application with the real Keitaro (APP_ENV=PRODUCTION).
+# The test environment with a fake Keitaro is docker/docker-compose-test.yml.
+# Run from the project root.
+#   Everything in Docker:          docker compose -f docker/docker-compose.yml up --build
+#   Only the database (local dev): docker compose -f docker/docker-compose.yml up -d db
+name: adrobot
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: adrobot
+      POSTGRES_PASSWORD: adrobot
+      POSTGRES_DB: adrobot
+    ports:
+      # Published so the app can also be run locally against this database.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adrobot -d adrobot"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    # Keitaro settings (KEITARO_URL, KEITARO_API_KEY, ...) come from app/configs/.env.
+    env_file:
+      - path: ../app/configs/.env
+        required: false
+    environment:
+      APP_ENV: PRODUCTION
+      # Inside the compose network the database is reachable by its service name.
+      DATABASE_URL: postgresql+psycopg://adrobot:adrobot@db:5432/adrobot
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

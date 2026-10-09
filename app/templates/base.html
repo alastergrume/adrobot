@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Keitaro wrapper{% endblock %} · Adrobot</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Adrobot <span>Keitaro wrapper</span></a>
+    <nav>
+      <a href="/">Campaigns</a>
+      <a href="/campaigns/new">New campaign</a>
+      <a href="/docs">API</a>
+    </nav>
+    {% if app_env == "TEST" %}<span class="mode mode-test" title="APP_ENV=TEST: settings from app/configs/.env_test">test</span>{% endif %}
+    {% if keitaro_settings.is_configured %}
+      <a class="mode" href="{{ keitaro_settings.admin_link() }}" target="_blank" rel="noopener"
+         title="Keitaro Admin API: {{ keitaro_settings.url }}">Keitaro ↗</a>
+    {% else %}
+      <span class="mode mode-error" title="Set KEITARO_URL and KEITARO_API_KEY">Keitaro is not configured</span>
+    {% endif %}
+  </header>
+  <main>
+    <div id="toast" class="toast" hidden></div>
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/js/scripts.js"></script>
+</body>
+</html>
